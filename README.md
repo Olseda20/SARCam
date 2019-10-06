@@ -11,10 +11,6 @@ The overall goal of this system is to analyse areas and locate victims lost that
 in the scottish mountains. 
 The visual cameras are important for clear vision of the scene and the thermal cameras can be utilised for 
 their benifits of analysing temperature differentials in different scenes.
-'
-'''
-
-
 
 
 These modules will work together to generate and with the application of neural network technology and 
