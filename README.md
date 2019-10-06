@@ -1,4 +1,4 @@
-# SARCam
+# Search and Rescue Drone Camera System
 This will be where I work on developing a camera system that will be used on a Search and Rescue drone.
 
 ## Camera Configuration
