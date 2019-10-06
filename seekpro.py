@@ -8,6 +8,12 @@ import usb.core
 import usb.util
 import numpy as np
 
+from picamera.array import PiRGBArray
+import picamera
+from time import sleep
+from io import BytesIO
+
+
 # Address enum
 READ_CHIP_ID                    = 54 # 0x36
 START_GET_IMAGE_TRANSFER        = 83 # 0x53
@@ -167,7 +173,6 @@ class SeekPro():
           return self.correct_dead_pix(self.crop(img)-self.calib)
 
 
-
 if __name__ == '__main__':
   import cv2
   from time import time
@@ -183,14 +188,32 @@ if __name__ == '__main__':
     maxi = img.max()
     return (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8)
 
-  cam = SeekPro()
+  # Setting thermal camera
+  ThermCam = SeekPro()
+  
+  ##Initialising RGB Camera 
+  cam = picamera.PiCamera()
+  cam.resolution = (WIDTH,HEIGHT)
+  cam.framerate = 24
+  
+  
   cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
+  cv2.namedWindow("RGB",cv2.WINDOW_NORMAL)
   t0 = time()
   
   while True:
     t = time()
     print("fps:",1/(t-t0))
     t0 = time()
-    r = cam.get_image()
+    r = ThermCam.get_image()
+    ##v = VisCam.get_image()
+    
+    #Get Visual Image
+    framebuf = np.empty((HEIGHT,WIDTH,3), dtype=np.uint8)
+    #cam.capture(framebuf, 'bgr')
+    #framebuf = framebuf.reshape((HEIGHT,WIDTH, 3))
+    
+    
     cv2.imshow("Seek",rescale(r))
+    cv2.imshow("RGB",framebuf)
     cv2.waitKey(1)
