@@ -1,8 +1,8 @@
-# Author: Victor Couty
+# Original Author: Victor Couty
+# Modified by: Omar Ali
 
-# This code is a basic wrapper for Seek thermal Pro IR camera in Python
-# It only requires numpy and pyusb
-# To run this file and test the camera, you will also need opencv
+### This module is where the thermal camera image can be captured
+
 
 import usb.core
 import usb.util
@@ -165,6 +165,7 @@ class SeekPro():
       elif status == 3: # Normal frame
         if self.calib is not None:
           return self.correct_dead_pix(self.crop(img)-self.calib)
+
 
 
 if __name__ == '__main__':
