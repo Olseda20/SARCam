@@ -6,6 +6,7 @@
 import usb.core
 import usb.util
 import numpy as np
+import cv2
 
 from time import sleep
 from io import BytesIO
@@ -178,17 +179,17 @@ class SeekPro():
     To adapt the range of values to the actual min and max and cast it into
     an 8 bits image
     """
-    tempMinVal = 1
-    tempMaxVal = 3000
+    tempMinVal = 0
+    tempMaxVal = 1500
     if img is None:
         return np.array([0])
     mini = np.clip(img.min(), tempMinVal, tempMaxVal) 
-    
+    #mini = img.min()
     #Added clipping to improve perfornamce, not yet working
     maxi = np.clip(img.max(), tempMinVal, tempMaxVal)
-    print((np.clip(img-mini,1,maxi-mini)/(maxi-mini)*255.).astype(np.uint8))
-    print(mini)
-    print(maxi)
+    #print((np.clip(img-mini,1,maxi-mini)/(maxi-mini)*255.).astype(np.uint8))
+    #print(mini)
+    #print(maxi)
     
     return (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8)
 
@@ -199,43 +200,22 @@ if __name__ == '__main__':
 
   # Setting thermal camera
   IRCam = SeekPro()
-
+  t0 = time()
+  
   while True:
-
+      t = time()
+      print("fps:",1/(t-t0))
+      t0 = time()
+    
       cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
       
       r = IRCam.get_image()
       rdisp = IRCam.rescale(r)
-      print(rdisp)
+      #print(rdisp)
       cv2.imshow("Seek",rdisp)
+      
       
       if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         
       cv2.waitKey(1)
-
-  
-#  while True:
-#    t = time()
-#    print("fps:",1/(t-t0))
-#    t0 = time()
-#    r = ThermCam.get_image()
-#    #v = VisCam.get_image()
-#    
-#    # Capture frame-by-frame
-# #   ret, frame = video_capture.read()
-#
-#    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#    
-#    #Get Visual Image
-#    # framebuf = np.empty((HEIGHT,WIDTH,3), dtype=np.uint8)
-#    # cam.capture(framebuf, 'bgr')
-#    # framebuf = framebuf.reshape((HEIGHT,WIDTH, 3))
-#    
-#    
-#    cv2.imshow("Seek",ThermCam.rescale(r))
-##    cv2.imshow("RGB",frame)
-#    cv2.waitKey(1)
-#    
-#video_capture.release()
-#cv2.destroyAllWindows()
