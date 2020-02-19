@@ -173,12 +173,6 @@ class SeekPro():
         if self.calib is not None:
           return self.correct_dead_pix(self.crop(img)-self.calib)
         
-  
-
-if __name__ == '__main__':
-  import cv2
-  from time import time
-  
   def rescale(img):
     """
     To adapt the range of values to the actual min and max and cast it into
@@ -192,26 +186,27 @@ if __name__ == '__main__':
     
     #Added clipping to improve perfornamce, not yet working
     maxi = np.clip(img.max(), tempMinVal, tempMaxVal)
-    print((np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8))
-    print(mini)
-    print(maxi)
+    # print((np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8))
+    # print(mini)
+    # print(maxi)
     
     return (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8)
 
 
-  
+if __name__ == '__main__':
+  import cv2
+  from time import time
+
   # Setting thermal camera
-  ThermCam = SeekPro()
+  IRCam = SeekPro()
 
   while True:
-      
-      
-      
+
       cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
       
-      r = ThermCam.get_image()
-      print(r)
-      cv2.imshow("Seek",rescale(r))
+      r = IRCam.get_image()
+      # print(r)
+      cv2.imshow("Seek",IRCam.rescale(r))
       
       if cv2.waitKey(1) & 0xFF == ord('q'):
             break
