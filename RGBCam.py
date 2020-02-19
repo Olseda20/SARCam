@@ -4,7 +4,7 @@ from picamera import PiCamera
 import time
 import cv2
 
-RESOLUTION = 640, 480
+RESOLUTION = 320, 240
 FRAMERATE = 32
 
 class PiCam():

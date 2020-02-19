@@ -200,14 +200,16 @@ if __name__ == '__main__':
 
   # Setting thermal camera
   IRCam = SeekPro()
+  cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
+
   t0 = time()
+  
   
   while True:
       t = time()
       print("fps:",1/(t-t0))
       t0 = time()
     
-      cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
       
       r = IRCam.get_image()
       rdisp = IRCam.rescale(r)
