@@ -6,6 +6,16 @@ from time import time
 
 import concurrent.futures
 
+
+##Giving OS Permissions
+import os
+import sys
+import subprocess
+
+if os.geteuid() != 0:
+    subprocess.call(['sudo', 'python3'] + sys.argv)
+
+
 # Setting the camera functions
 IRCam = IRCam.SeekPro()
 RGBCam = RGBCam.PiCam()
@@ -28,9 +38,11 @@ def thermImageProc():
       centre = (w/2,h/2)
       IRRotMat = cv2.getRotationMatrix2D(centre, 180, 1)
       IRRot = cv2.warpAffine(IRdisp, IRRotMat,(w, h))
+      
       #applying themal image colourmap
+      IRColor = cv2.applyColorMap(IRRot, cv2.COLORMAP_COOL)
 
-      return IRRot
+      return IRColor
 
 
 def visImageProc():
@@ -38,20 +50,33 @@ def visImageProc():
       RGB = RGBCam.frameCapture()
       return RGB
 
+IRImg = thermImageProc()
+RGBImg = visImageProc()
+
 while True:
     t = time()
     print("fps:",1/(t-t0))
     t0 = time()
-    
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-          IRImg = executor.submit(thermImageProc)
-          RGBImg = executor.submit(visImageProc)
-          
-          concurrent.futures.as_completed():
-          #displaying the rotated thermal image
-          cv2.imshow("Seek",IRRot)
-          cv2.imshow("RGB", RGBCam.frameCapture())
-      
+#    
+#    with concurrent.futures.ThreadPoolExecutor() as executor:
+#        IRImg = executor.submit(thermImageProc())
+#        RGBImg = executor.submit(visImageProc())
+#        
+#        IRImg = IRImg.result()
+#        #concurrent.futures.as_completed(IRImg)
+#        RGBImg = RGBImg.result()
+#        #concurrent.futures.as_completed(RGBImg)
+#    
+    IRImg = thermImageProc()
+    RGBImg = visImageProc()
+    fusedImg = IRImg + RGBImg
+        
+        
+    #concurrent.futures.as_completed()
+    #displaying the rotated thermal image
+    cv2.imshow("Seek",IRImg)
+    cv2.imshow("RGB", RGBImg)
+    cv2.imshow("fused",fusedImg)
 
 
    
