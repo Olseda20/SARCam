@@ -3,13 +3,18 @@
 
 ### This module is where the thermal camera image can be captured
 
+##Giving OS Permissions
+import os
+import sys
+import subprocess
+
+if os.geteuid() != 0:
+    subprocess.call(['sudo', 'python3'] + sys.argv)
+
 import usb.core
 import usb.util
 import numpy as np
 import cv2
-
-from time import sleep
-from io import BytesIO
 
 # Address enum
 READ_CHIP_ID                    = 54 # 0x36
@@ -195,7 +200,6 @@ class SeekPro():
 
 
 if __name__ == '__main__':
-  import cv2
   from time import time
 
   # Setting thermal camera
