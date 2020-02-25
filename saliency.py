@@ -26,23 +26,24 @@ def visImageProc():
       return RGB
 t=0
 t0 = 0
+saliency = cv2.saliency.StaticSaliencyFineGrained_create()    
+# saliency = cv2.saliency.StaticSaliencySpectralResidual_create()    
+
+
 while True:
       t = time()
       print("fps:",1/(t-t0))
       t0 = time()
 
       RGB = visImageProc()
-      # saliency = cv2.saliency.StaticSaliencyFineGrained_create()    
-      saliency = cv2.saliency.StaticSaliencySpectralResidual_create()    
       (success, saliencyMap) = saliency.computeSaliency(RGB)
       # threshMap = cv2.threshold(saliencyMap.astype("uint8"),100,255,
       # cv2.THRESH_BINARY| cv2.THRESH_OTSU)[1]
-      cv2.imshow("RGB",RGB)
+      # cv2.imshow("RGB",RGB)
       # cv2.imshow("threshMap",threshMap)
+ 
       cv2.imshow("SalMap",saliencyMap)
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #    break
-
+      
       if cv2.waitKey(1) & 0xFF == ord('q'):
             break
       cv2.waitKey(1)

@@ -184,18 +184,18 @@ class SeekPro():
     To adapt the range of values to the actual min and max and cast it into
     an 8 bits image
     """
-    tempMinVal = 0
-    tempMaxVal = 1500
+    tempMinVal = 1
+    tempMaxVal = 1000
     if img is None:
         return np.array([0])
-    mini = np.clip(img.min(), tempMinVal, tempMaxVal) 
-    #mini = img.min()
+    # mini = np.clip(img.min(), tempMinVal, tempMaxVal) 
+    mini = img.min()
+    maxi = img.max()
     #Added clipping to improve perfornamce, not yet working
-    maxi = np.clip(img.max(), tempMinVal, tempMaxVal)
+    # maxi = np.clip(img.max(), tempMinVal, tempMaxVal)
     #print((np.clip(img-mini,1,maxi-mini)/(maxi-mini)*255.).astype(np.uint8))
     #print(mini)
     #print(maxi)
-    
     return (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8)
 
 
