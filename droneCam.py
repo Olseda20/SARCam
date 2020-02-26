@@ -1,29 +1,25 @@
-import IRCam
-import RGBCam
-import cv2
-import numpy as np
-from time import time
-
-import concurrent.futures
-
-saliency = cv2.saliency.StaticSaliencyFineGrained_create()
-
 ##Giving OS Permissions
 import os
 import sys
 import subprocess
+if os.geteuid() != 0:
+    subprocess.call(['sudo', 'python3'] + sys.argv)
 
-# if os.geteuid() != 0:
-#     subprocess.call(['sudo', 'python3'] + sys.argv)
+import cv2
+import IRCam
+import RGBCam
+import saliency 
+import numpy as np
+from time import time
+import concurrent.futures
 
 # Setting the camera functions
-IRCam = IRCam.SeekPro()
+# IRCam = IRCam.SeekPro()
 RGBCam = RGBCam.PiCam()
-
-t0 = time()
+saliency = saliency.findSaliency()
 
 #Initialise Camera Windows
-cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
+# cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
 cv2.namedWindow("RGB", cv2.WINDOW_NORMAL)
 
 def thermImageProc(): 
@@ -49,15 +45,45 @@ def visImageProc():
       RGB = RGBCam.frameCapture()
       return RGB
 
-
-IRImg = thermImageProc()
+# IRImg = thermImageProc()
 prevRGBImg = visImageProc()
 
+t= 0
+t0 =0
 while True:
       t = time() 
       print("fps:",1/(t-t0))
       t0 = time()
-#    
+
+      RGBImg = visImageProc()
+#     fusedImg = IRImg + RGBImg
+      # if (IRImg.all() != thermImageProc().all()):
+      #       IRImg = thermImageProc()
+      
+      RGBImg = prevRGBImg
+        
+      #concurrent.futures.as_completed()
+      #displaying the rotated thermal image
+      # cv2.imshow("Seek",IRImg)
+      cv2.imshow("RGB", RGBImg)
+#     cv2.imshow("fused",fusedImg)
+
+      ##Saliency 
+      RGBSal = saliency.getSaliency(RGBImg)
+      cv2.imshow("Salient",RGBSal)
+
+      # prevIRImg = IRImg
+      prevRGBImg = visImageProc()
+      if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+      cv2.waitKey(1)
+
+
+
+
+
+
+# ATTEMPT AT THREADING 
 #    with concurrent.futures.ThreadPoolExecutor() as executor:
 #        IRImg = executor.submit(thermImageProc())
 #        RGBImg = executor.submit(visImageProc())
@@ -66,35 +92,3 @@ while True:
 #        #concurrent.futures.as_completed(IRImg)
 #        RGBImg = RGBImg.result()
 #        #concurrent.futures.as_completed(RGBImg)
-#    
-      # try:
-      #       IRImg = thermImageProc()
-      # except:
-      #       pass
-
-      # RGBImg = visImageProc()
-#     fusedImg = IRImg + RGBImg
-      if (IRImg.all() != thermImageProc().all()):
-            IRImg = thermImageProc()
-      
-      RGBImg = prevRGBImg
-
-      #SALIENCY CODE 
-      # saliency = cv2.saliency.StaticSaliencySpectralResidual_create()    
-      # (success, saliencyMap) = saliency.computeSaliency(RGBImg)
-      # cv2.imshow("SalMap",saliencyMap)
-
-
-        
-      #concurrent.futures.as_completed()
-      #displaying the rotated thermal image
-      cv2.imshow("Seek",IRImg)
-      cv2.imshow("RGB", RGBImg)
-#     cv2.imshow("fused",fusedImg)
-
-      prevIRImg = IRImg
-      prevRGBImg = visImageProc()
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-      cv2.waitKey(1)
-

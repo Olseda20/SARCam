@@ -1,50 +1,54 @@
 import cv2
-import RGBCam
-from time import time
 
-##import image
-RGBCam = RGBCam.PiCam()
+class findSaliency():
+      def __init__(self):
+            # self.saliency = cv2.saliency.StaticSaliencyFineGrained_create()
+            self.saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
 
-# from IRCam import getImage() as IR 
+      def getSaliency(self,img):
+            (success, saliencyMap) = self.saliency.computeSaliency(img)
+            threshMap = cv2.threshold((255*saliencyMap).astype("uint8"),0,255, 
+                  cv2.THRESH_BINARY| cv2.THRESH_OTSU)[1]
+            return saliencyMap, threshMap
 
-# cap = cv2.VideoCapture(0)
-# if not (cap.isOpened()):
-#     print("Could not open video device")
+if __name__ == '__main__':
+      from time import time
 
-# def getRGB():    
-#     ret, frame = cap.read()
-#     return frame 
+      import RGBCam
+      from time import time
 
-##Saleincy analysis
-##find ROI in image
+      #import image
+      RGBCam = RGBCam.PiCam()
 
-cv2.namedWindow("RGB",cv2.WINDOW_NORMAL)
+      cap = cv2.VideoCapture(0)
+      if not (cap.isOpened()):
+          print("Could not open video device")
 
-def visImageProc():
-      #Get Visual Image
-      RGB = RGBCam.frameCapture()
-      return RGB
-t=0
-t0 = 0
-saliency = cv2.saliency.StaticSaliencyFineGrained_create()    
-# saliency = cv2.saliency.StaticSaliencySpectralResidual_create()    
+      def getRGB():    
+          ret, frame = cap.read()
+          return frame 
 
+      def visImageProc():
+            #Get Visual Image
+            RGB = RGBCam.frameCapture()
+            return RGB
 
-while True:
-      t = time()
-      print("fps:",1/(t-t0))
-      t0 = time()
+      findSaliency = findSaliency()
+      t = 0 
+      t0 =0
 
-      RGB = visImageProc()
-      (success, saliencyMap) = saliency.computeSaliency(RGB)
-      # threshMap = cv2.threshold(saliencyMap.astype("uint8"),100,255,
-      # cv2.THRESH_BINARY| cv2.THRESH_OTSU)[1]
-      # cv2.imshow("RGB",RGB)
-      # cv2.imshow("threshMap",threshMap)
- 
-      cv2.imshow("SalMap",saliencyMap)
-      
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-      cv2.waitKey(1)
-    
+      while True:
+            t = time()
+            print("fps:",1/(t-t0))
+            t0 = time()
+
+            RGB = visImageProc()
+            saliencyMap = findSaliency.getSaliency(RGB)[0]
+            threshMap = findSaliency.getSaliency(RGB)[1]
+
+            cv2.imshow("SalMap",saliencyMap)
+            cv2.imshow("threshMap",threshMap)
+            
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                  break
+            cv2.waitKey(1)
