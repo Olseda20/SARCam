@@ -1,9 +1,9 @@
-##Giving OS Permissions
-import os
-import sys
-import subprocess
-if os.geteuid() != 0:
-    subprocess.call(['sudo', 'python3'] + sys.argv)
+# ##Giving OS Permissions
+# import os
+# import sys
+# import subprocess
+# if os.geteuid() != 0:
+#     subprocess.call(['sudo', 'python3'] + sys.argv)
 
 import cv2
 import IRCam
@@ -69,7 +69,7 @@ while True:
 #     cv2.imshow("fused",fusedImg)
 
       ##Saliency 
-      RGBSal = saliency.getSaliency(RGBImg)
+      RGBSal = saliency.getSaliency(RGBImg)[0]
       cv2.imshow("Salient",RGBSal)
 
       # prevIRImg = IRImg

@@ -2,8 +2,8 @@ import cv2
 
 class findSaliency():
       def __init__(self):
-            # self.saliency = cv2.saliency.StaticSaliencyFineGrained_create()
-            self.saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
+            self.saliency = cv2.saliency.StaticSaliencyFineGrained_create()
+            # self.saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
 
       def getSaliency(self,img):
             (success, saliencyMap) = self.saliency.computeSaliency(img)
