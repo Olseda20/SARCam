@@ -1,4 +1,4 @@
-# Original Author: Victor Couty
+ # Original Author: Victor Couty
 # Modified by: Omar Ali
 
 ### This module is where the thermal camera image can be captured
@@ -201,6 +201,11 @@ class SeekPro():
 
 if __name__ == '__main__':
   from time import time
+  from time import strftime
+  import scipy.io as sio
+  
+  thermdata = {}
+  thermrescaledata = {}
 
   # Setting thermal camera
   IRCam = SeekPro()
@@ -215,12 +220,19 @@ if __name__ == '__main__':
       t0 = time()
     
       
-      r = IRCam.get_image()
+      r = IRCam.get_image()      
+      r[r > 60000] =0
       rdisp = IRCam.rescale(r)
       #print(rdisp)
       cv2.imshow("Seek",rdisp)
+      timestr = strftime("%d%m%Y-%H%M%S")
       
-      
+      thermdata['thermcameradata'] = r
+      thermrescaledata['thermcameradatarescale'] = rdisp
+      sio.savemat(f'/home/pi/SARCam/thermalmat/thermal{timestr}.mat', thermdata)
+      sio.savemat(f'/home/pi/SARCam/thermalmat/thermalrescale{timestr}.mat', thermrescaledata)
+      cv2.imwrite(f'/home/pi/SARCam/thermalmat/thermal{timestr}.png', rdisp)
+
       if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         

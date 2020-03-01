@@ -1,9 +1,9 @@
-# ##Giving OS Permissions
-# import os
-# import sys
-# import subprocess
-# if os.geteuid() != 0:
-#     subprocess.call(['sudo', 'python3'] + sys.argv)
+##Giving OS Permissions
+import os
+import sys
+import subprocess
+if os.geteuid() != 0:
+    subprocess.call(['sudo', 'python3'] + sys.argv)
 
 import cv2
 import IRCam
@@ -14,12 +14,12 @@ from time import time
 import concurrent.futures
 
 # Setting the camera functions
-# IRCam = IRCam.SeekPro()
+IRCam = IRCam.SeekPro()
 RGBCam = RGBCam.PiCam()
 saliency = saliency.findSaliency()
 
 #Initialise Camera Windows
-# cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
+cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
 cv2.namedWindow("RGB", cv2.WINDOW_NORMAL)
 
 def thermImageProc(): 
@@ -36,35 +36,34 @@ def thermImageProc():
       IRRot = cv2.warpAffine(IRdisp, IRRotMat,(w, h))
       
       #applying themal image colourmap
-      IRColor = cv2.applyColorMap(IRRot, cv2.COLORMAP_HOT)
+#      IRColor = cv2.applyColorMap(IRRot, cv2.COLORMAP_HOT)
 
-      return IRColor
+      return IRRot
 
 def visImageProc():
       #Get Visual Image
       RGB = RGBCam.frameCapture()
       return RGB
 
-# IRImg = thermImageProc()
+IRImg = thermImageProc()
 prevRGBImg = visImageProc()
 
-t= 0
-t0 =0
+t = 0
+t0 = 0
 while True:
       t = time() 
       print("fps:",1/(t-t0))
       t0 = time()
-
+#
       RGBImg = visImageProc()
-#     fusedImg = IRImg + RGBImg
-      # if (IRImg.all() != thermImageProc().all()):
-      #       IRImg = thermImageProc()
+##     fusedImg = IRImg + RGBImg
+#      if (IRImg.all() != thermImageProc().all()):
+      IRImg = thermImageProc()
       
-      RGBImg = prevRGBImg
         
       #concurrent.futures.as_completed()
       #displaying the rotated thermal image
-      # cv2.imshow("Seek",IRImg)
+      cv2.imshow("Seek",IRImg)
       cv2.imshow("RGB", RGBImg)
 #     cv2.imshow("fused",fusedImg)
 
@@ -72,7 +71,7 @@ while True:
       RGBSal = saliency.getSaliency(RGBImg)[0]
       cv2.imshow("Salient",RGBSal)
 
-      # prevIRImg = IRImg
+      prevIRImg = IRImg
       prevRGBImg = visImageProc()
       if cv2.waitKey(1) & 0xFF == ord('q'):
             break
