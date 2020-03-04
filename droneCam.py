@@ -22,6 +22,7 @@ saliency = saliency.findSaliency()
 cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
 cv2.namedWindow("RGB", cv2.WINDOW_NORMAL)
 
+#class droneCam():
 def thermImageProc(): 
       #Get thermal image 
       IR = IRCam.get_image()
@@ -45,37 +46,39 @@ def visImageProc():
       RGB = RGBCam.frameCapture()
       return RGB
 
-IRImg = thermImageProc()
-prevRGBImg = visImageProc()
 
-t = 0
-t0 = 0
-while True:
-      t = time() 
-      print("fps:",1/(t-t0))
-      t0 = time()
-#
-      RGBImg = visImageProc()
-##     fusedImg = IRImg + RGBImg
-#      if (IRImg.all() != thermImageProc().all()):
-      IRImg = thermImageProc()
-      
+if __name__ == '__main__':
+    IRImg = thermImageProc()
+    prevRGBImg = visImageProc()
+    
+    t = 0
+    t0 = 0
+    while True:
+          t = time() 
+          print("fps:",1/(t-t0))
+          t0 = time()
+    #
+          RGBImg = visImageProc()
+    ##     fusedImg = IRImg + RGBImg
+    #      if (IRImg.all() != thermImageProc().all()):
+          IRImg = thermImageProc()
+          
         
       #concurrent.futures.as_completed()
-      #displaying the rotated thermal image
-      cv2.imshow("Seek",IRImg)
-      cv2.imshow("RGB", RGBImg)
-#     cv2.imshow("fused",fusedImg)
-
-      ##Saliency 
-      RGBSal = saliency.getSaliency(RGBImg)[0]
-      cv2.imshow("Salient",RGBSal)
-
-      prevIRImg = IRImg
-      prevRGBImg = visImageProc()
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-      cv2.waitKey(1)
+          #displaying the rotated thermal image
+          cv2.imshow("Seek",IRImg)
+          cv2.imshow("RGB", RGBImg)
+    #     cv2.imshow("fused",fusedImg)
+    
+          ##Saliency 
+          RGBSal = saliency.getSaliency(RGBImg)[0]
+          cv2.imshow("Salient",RGBSal)
+    
+          prevIRImg = IRImg
+          prevRGBImg = visImageProc()
+          if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+          cv2.waitKey(1)
 
 
 

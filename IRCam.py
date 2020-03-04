@@ -184,18 +184,14 @@ class SeekPro():
     To adapt the range of values to the actual min and max and cast it into
     an 8 bits image
     """
-    tempMinVal = 1
-    tempMaxVal = 1000
+
+    #implemented to prevent the thermal image
+    img[img >60000] = 0
+
     if img is None:
         return np.array([0])
-    # mini = np.clip(img.min(), tempMinVal, tempMaxVal) 
     mini = img.min()
     maxi = img.max()
-    #Added clipping to improve perfornamce, not yet working
-    # maxi = np.clip(img.max(), tempMinVal, tempMaxVal)
-    #print((np.clip(img-mini,1,maxi-mini)/(maxi-mini)*255.).astype(np.uint8))
-    #print(mini)
-    #print(maxi)
     return (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8)
 
 
@@ -218,20 +214,18 @@ if __name__ == '__main__':
       t = time()
       print("fps:",1/(t-t0))
       t0 = time()
-    
       
-      r = IRCam.get_image()      
-      r[r > 60000] =0
+      r = IRCam.get_image()
       rdisp = IRCam.rescale(r)
       #print(rdisp)
       cv2.imshow("Seek",rdisp)
-      timestr = strftime("%d%m%Y-%H%M%S")
-      
-      thermdata['thermcameradata'] = r
-      thermrescaledata['thermcameradatarescale'] = rdisp
-      sio.savemat(f'/home/pi/SARCam/thermalmat/thermal{timestr}.mat', thermdata)
-      sio.savemat(f'/home/pi/SARCam/thermalmat/thermalrescale{timestr}.mat', thermrescaledata)
-      cv2.imwrite(f'/home/pi/SARCam/thermalmat/thermal{timestr}.png', rdisp)
+
+      # timestr = strftime("%d%m%Y-%H%M%S")
+      # thermdata['thermcameradata'] = r
+      # thermrescaledata['thermcameradatarescale'] = rdisp
+      # sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalmat.mat', thermdata)
+      # sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalrescale.mat', thermrescaledata)
+      # cv2.imwrite(f'/home/pi/SARCam/thermalmat/{timestr}thermalimg.png', rdisp)
 
       if cv2.waitKey(1) & 0xFF == ord('q'):
             break
