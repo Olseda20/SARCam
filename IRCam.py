@@ -184,31 +184,47 @@ class SeekPro():
     To adapt the range of values to the actual min and max and cast it into
     an 8 bits image
     """
-
-    #implemented to prevent the thermal image
-    img[img >60000] = 0
+    
+    #shifting the range of the image
+    img = img+30000
+    # #implemented to prevent the thermal image
+    # img[img >60000] = 0
 
     if img is None:
         return np.array([0])
     mini = img.min()
     maxi = img.max()
-    return (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8)
+    imgScale = (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8) 
+    
+    #Calibration matrix
+    mtx = np.array([[639.06, 0, 135.45],[0, 637.74, 99.42],[0, 0, 1]])
+    #Distortion matrix
+    dist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
+    
+    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(WIDTH,HEIGHT),1,(WIDTH,HEIGHT))
+    
+    # undistort
+    dst = cv2.undistort(imgScale, mtx, dist, None, newcameramtx)
+    # crop the image
+    x,y,w,h = roi
+    dst = dst[y:y+h, x:x+w]
+
+    return dst
 
 
 if __name__ == '__main__':
   from time import time
   from time import strftime
-  import scipy.io as sio
+  from time import sleep
+#  import scipy.io as sio
   
-  thermdata = {}
-  thermrescaledata = {}
+#  thermdata = {}
+#  thermrescaledata = {}
 
   # Setting thermal camera
   IRCam = SeekPro()
   cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
-
   t0 = time()
-  
   
   while True:
       t = time()
@@ -217,17 +233,18 @@ if __name__ == '__main__':
       
       r = IRCam.get_image()
       rdisp = IRCam.rescale(r)
-      #print(rdisp)
-      cv2.imshow("Seek",rdisp)
 
-      # timestr = strftime("%d%m%Y-%H%M%S")
-      # thermdata['thermcameradata'] = r
-      # thermrescaledata['thermcameradatarescale'] = rdisp
-      # sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalmat.mat', thermdata)
-      # sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalrescale.mat', thermrescaledata)
-      # cv2.imwrite(f'/home/pi/SARCam/thermalmat/{timestr}thermalimg.png', rdisp)
+    #  print(rdisp)
+      cv2.imshow("Seek",rdisp)
+      
+      timestr = strftime("%d%m%Y-%H%M%S")
+    #  thermdata['thermcameradata'] = r
+    #  thermrescaledata['thermcameradatarescale'] = rdisp
+    #  sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalmat.mat', thermdata)
+    #  sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalrescale.mat', thermrescaledata)
+    #  cv2.imwrite(f'/home/pi/SARCam/thermalmat/{timestr}thermalimg.png', rdisp)
 
       if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-        
+#      sleep(0.5)
       cv2.waitKey(1)

@@ -3,6 +3,7 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 import time
 import cv2
+import numpy as np
 
 RESOLUTION = 320, 240
 FRAMERATE = 32
@@ -21,18 +22,38 @@ class PiCam():
     def frameCapture(self):
         self.rawCapture.truncate(0)
         for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
-            image = frame.array
-            return image
+            img = frame.array
+            
+            #Calibration matrix
+            mtx = np.array([[626.80,0,85.301],[0,553.14,130.05],[0, 0, 1]])
+            #Distortion matrix
+            dist = np.array([[0.23819,0.80864,0.024662,-0.18100,-0.36040]])
+            
+            h,  w = img.shape[:2]
+            newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
+            
+            # undistort
+            dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+            # crop the image
+            x,y,w,h = roi
+            dst = dst[y:y+h, x:x+w]
+
+            return dst
             
 
 if __name__ == '__main__':
     import cv2
-    import time
+    import time  
+    from time import strftime
+    from time import sleep
+
   
     RGBCam = PiCam()
     cv2.namedWindow("RGB",cv2.WINDOW_NORMAL)
     
     while True:
+        timestr = strftime("%d%m%Y-%H%M%S")
+
         # grab the raw NumPy array representing the image, then initialize the timestamp
         # and occupied/unoccupied text
         # show the frame
@@ -41,6 +62,9 @@ if __name__ == '__main__':
         # clear the stream in preparation for the next frame
         #rawCapture.truncate(0)
         # if the `q` key was pressed, break from the loop
+        cv2.imwrite(f'/home/pi/SARCam/Camera Calibration/Vis_01/{timestr}visimg.png', RGBCam.frameCapture())
+
+        sleep(0.5)
         if key == ord("q"):
             break
         
