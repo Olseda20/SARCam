@@ -20,12 +20,12 @@ import sys
 import argparse
 
 #---------------------- SET THE PARAMETERS
-nRows = 9
-nCols = 6
-dimension = 25 #- mm
+nRows = 5
+nCols = 8
+dimension = 50 #- mm
 
-workingFolder   = "./camera_01"
-imageType       = 'jpg'
+workingFolder   = "./Therm_01"
+imageType       = 'png'
 #------------------------------------------
 
 # termination criteria
@@ -137,6 +137,7 @@ if (nPatternFound > 1):
     print("Calibrated picture saved as calibresult.png")
     print("Calibration Matrix: ")
     print(mtx)
+    print(dist)
     print("Disortion: ", dist)
 
     #--------- Save result
@@ -146,7 +147,7 @@ if (nPatternFound > 1):
     np.savetxt(filename, dist, delimiter=',')
 
     mean_error = 0
-    for i in xrange(len(objpoints)):
+    for i in range(len(objpoints)):
         imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
         error = cv2.norm(imgpoints[i],imgpoints2, cv2.NORM_L2)/len(imgpoints2)
         mean_error += error
