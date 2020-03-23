@@ -40,6 +40,18 @@ IRdist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
 thermPoints = np.array([[11, 6],[34, 226],[296, 223],[296,19],[101,160]])
 visPoints = np.array([[49, 24],[57, 158],[232,156],[232,26],[99,117]])
 
+import concurrent.futures
+
+
+##Giving OS Permissions
+import os
+import sys
+import subprocess
+
+if os.geteuid() != 0:
+    subprocess.call(['sudo', 'python3'] + sys.argv)
+
+
 # Setting the camera functions
 IRCam = IRCam.SeekPro()
 RGBCam = RGBCam.PiCam()
