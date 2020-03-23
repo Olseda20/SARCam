@@ -170,8 +170,8 @@ class SeekPro():
       status,img = self.grab()
       #print("Status=",status)
       #Program breaking
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+      # if cv2.waitKey(1) & 0xFF == ord('q'):
+      #       break
         
       if status == 1: # Calibration frame
         self.calib = self.crop(img)-1600
@@ -179,6 +179,20 @@ class SeekPro():
         if self.calib is not None:
           return self.correct_dead_pix(self.crop(img)-self.calib)
         
+  # def lensCalibration(self, img):
+  #   ##Calibration matrix (SOURCE OF ERROR)
+  #   mtx = np.array([[639.06, 0, 135.45],[0, 637.74, 99.42],[0, 0, 1]])
+  #   ##Distortion matrix (SOURCE OF ERROR)
+  #   dist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
+  #   ##Calibrating image captured  
+  #   newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(WIDTH,HEIGHT),1,(WIDTH,HEIGHT))
+  #   ##Revoming image distortion
+  #   dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
+  #   ## Cropping regions that are not in the image after correction
+  #   x,y,w,h = roi
+  #   dst = dst[y:y+h, x:x+w]
+  #   return dst
+
   def rescale(self, img):
     """
     To adapt the range of values to the actual min and max and cast it into
@@ -186,7 +200,7 @@ class SeekPro():
     """
     
     #shifting the range of the image
-    img = img+30000
+    img = img+20000
     # #implemented to prevent the thermal image
     # img[img >60000] = 0
 
@@ -195,21 +209,20 @@ class SeekPro():
     mini = img.min()
     maxi = img.max()
     imgScale = (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8) 
-    
-    #Calibration matrix
-    mtx = np.array([[639.06, 0, 135.45],[0, 637.74, 99.42],[0, 0, 1]])
-    #Distortion matrix
-    dist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
-    
-    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(WIDTH,HEIGHT),1,(WIDTH,HEIGHT))
-    
-    # undistort
-    dst = cv2.undistort(imgScale, mtx, dist, None, newcameramtx)
-    # crop the image
-    x,y,w,h = roi
-    dst = dst[y:y+h, x:x+w]
+#      ##Calibration matrix (SOURCE OF ERROR)
+#     mtx = np.array([[639.06, 0, 135.45],[0, 637.74, 99.42],[0, 0, 1]])
+#     ##Distortion matrix (SOURCE OF ERROR)
+#     dist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
+#     ##Calibrating image captured  
+#     newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(WIDTH,HEIGHT),1,(WIDTH,HEIGHT))
+#     ##Revoming image distortion
+#     dst = cv2.undistort(imgScale, mtx, dist, None, newcameramtx)
+#     ## Cropping regions that are not in the image after correction
+# #    x,y,w,h = roi
+# #    dst = dst[y:y+h, x:x+w]
+    return imgScale #dst
 
-    return dst
+  # def IRCalibration:
 
 
 if __name__ == '__main__':
