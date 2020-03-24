@@ -21,6 +21,9 @@ class findSaliency():
             return saliencyMap, threshMap
 
       def getContors(self,threshMap, orig):
+            '''Function to find all the thresholded regions in a saleint image 
+            and to identify all of the possible ROI'''
+
             # find contours in the edge map
             cnts = cv2.findContours(threshMap, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
             cnts = imutils.grab_contours(cnts)
@@ -29,86 +32,77 @@ class findSaliency():
             method = "bottom-to-top"
             (cnts, boundingBoxes) = contours.sort_contours(cnts, method=method)
             imgshape = threshMap.shape
-
-            # initialiising array 
-            try: 
-                  ROIPoints = np.zeros(shape=(len(boundingBoxes),2), dtype='uint8')
-            except:
-                  print('no ROI points')
             try:
-
                   for (i, c) in enumerate(cnts):
                         sortedImage = contours.label_contour(orig, c, i, color=(240, 0, 159))
-                  return sortedImage
+                  return sortedImage, boundingBoxes
             except:
                   print('sort fail')
-            
 
-      '''def getContorPoition(self):
+
+      def getContorPosition(self, img, boundingBoxes):
             #Left Right
             L, C, R = 0, 0, 0
             #Up Down
             T, M, B = 0, 0, 0
+            # initialiising array 
+            try: 
+                  ROIPoints = np.zeros(shape=(len(boundingBoxes),2), dtype='uint16')
+            except:
+                  print('no ROI points')
 
-            imgshape = threshMap.shape #Whatever image input is placed into here
+            imgshape = img.shape #Whatever image input is placed into here
 
             #Creating a tally of positions where the most interesting features are
             for i in range (0,len(boundingBoxes)):
-            try:
-                  #Saving the points of the image that 
-                  ROIPoints[i][0] = boundingBoxes[i][0]
-                  if ROIPoints[i][0]<= int(imshape[1]*1/3):
-                        L = L + 1
-                  elif ROIPoints[i][0] > int(imshape[1]*1/3) and ROIPoints[i][0] < int(imshape[1]*2/3):
-                        C = C + 1 
-                  elif ROIPoints[i][0] > int(imshape[1]*2/3):
-                        R = R + 1 
-                  else:
-                        print('horizontal positional error')
+                  try:
+                        #Saving the points of the image that 
+                        ROIPoints[i][0] = boundingBoxes[i][0]
+                        if ROIPoints[i][0] <= int(imgshape[1]*1/3):
+                              L = L + 1
+                        elif ROIPoints[i][0] > int(imgshape[1]*1/3) and ROIPoints[i][0] < int(imgshape[1]*2/3):
+                              C = C + 1 
+                        elif ROIPoints[i][0] >= int(imgshape[1]*2/3):
+                              R = R + 1 
+                        else:
+                              print('horizontal positional error')
 
-                  #
-                  ROIPoints[i][1] = boundingBoxes[i][1]
-                  #Remember downwards positive axis
-                  if ROIPoints[i][1] >= int(imshape[0]*2/3):
-                        B = B + 1
-                  elif ROIPoints[i][1] > int(imshape[0]*1/3) and ROIPoints[i][1] < int(imshape[0]*2/3):
-                        M = M + 1 
-                  elif ROIPoints[i][1] <= int(imshape[0]*1/3):
-                        T = T + 1 
-                  else:
-                        print('vertical positional error')
-            except:
-                  print('error in the ROI Location append loop')
+                        ROIPoints[i][1] = boundingBoxes[i][1]
+                        #Remember downwards positive axis
+                        if ROIPoints[i][1] >= int(imgshape[0]*2/3):
+                              B = B + 1
+                        elif ROIPoints[i][1] > int(imgshape[0]*1/3) and ROIPoints[i][1] < int(imgshape[0]*2/3):
+                              M = M + 1 
+                        elif ROIPoints[i][1] <= int(imgshape[0]*1/3):
+                              T = T + 1 
+                        else:
+                              print('vertical positional error')
+                  except:
+                        print('error in the ROI Location append loop')
 
 
-            #prioritising the centre if there are an even number of points on interest around the centre
-            # while L == R | T == B:
-            #     if L != 0 & R != 0:
-            #         L = L - 1
-            #         R = R - 1
-            #         C = C + 1
-
-            #     if T != 0 & B != 0:
-            #         T = T - 1
-            #         B = B - 1
-            #         M = M + 1
-
-            Hsignal = 0
-            Vsignal = 0
 
             #Left right signal 
             if L > C or L > R:
-            Hsignal = -1
-            if R > C or R > L:
-            Hsignal = 1
+                  Hsignal = -1
+                  print('left')
+            elif R > C or R > L:
+                  Hsignal = 1
+                  print('right')
+            else:
+                  Hsignal = 0
+            # Up down signal
             if T > M or T > B:
-            Vsignal = 1
-            if B > M or B > T:
-            Vsignal = -1
+                  Vsignal = 1
+                  print('up')
+            elif B > M or B > T:
+                  Vsignal = -1
+                  print('down')
+            else:
+                  Vsignal = 0
 
-            print(f'horizontal {Hsignal}')
-            print(f'Vertical {Vsignal}')
-            return'''
+            signal = Hsignal, Vsignal
+            return signal
 
 if __name__ == '__main__':
 
@@ -132,10 +126,11 @@ if __name__ == '__main__':
       t = 0 
       t0 =0
       findSaliency = findSaliency()
-      threshold = 10
+      threshold = 85
+      i = 0
       while True:
             t = time()
-            print("fps:",1/(t-t0))
+            # print("fps:",1/(t-t0))
             t0 = time()
 
             if cv2.waitKeyEx(1) & 0xFF == ord('w'):
@@ -143,12 +138,25 @@ if __name__ == '__main__':
             if cv2.waitKeyEx(1) & 0xFF == ord('s'):
                   threshold = threshold - 5
 
-            print(threshold)
-            
+            # print(threshold)
 
             RGB = visImageProc()
             (saliencyMap, threshMap) = findSaliency.getSaliency(RGB,threshold)
-            contor = findSaliency.getContors(threshMap, RGB)
+            
+            try:
+                  sortedImage, boundingBoxes = findSaliency.getContors(threshMap, RGB)
+            except:
+                  print('error2')
+
+            # print(boundingBoxes)
+            if i == 10:
+                  try:
+                        signal = findSaliency.getContorPosition(sortedImage, boundingBoxes)
+                  except:
+                        print('no gimbal movement')
+                  i = 0
+            i = i+1
+            
 
             cv2.imshow('rgb',RGB)
             cv2.imshow("SalMap",saliencyMap)
