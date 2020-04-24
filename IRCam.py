@@ -178,20 +178,7 @@ class SeekPro():
       elif status == 3: # Normal frame
         if self.calib is not None:
           return self.correct_dead_pix(self.crop(img)-self.calib)
-        
-  # def lensCalibration(self, img):
-  #   ##Calibration matrix (SOURCE OF ERROR)
-  #   mtx = np.array([[639.06, 0, 135.45],[0, 637.74, 99.42],[0, 0, 1]])
-  #   ##Distortion matrix (SOURCE OF ERROR)
-  #   dist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
-  #   ##Calibrating image captured  
-  #   newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(WIDTH,HEIGHT),1,(WIDTH,HEIGHT))
-  #   ##Revoming image distortion
-  #   dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
-  #   ## Cropping regions that are not in the image after correction
-  #   x,y,w,h = roi
-  #   dst = dst[y:y+h, x:x+w]
-  #   return dst
+
 
   def rescale(self, img):
     """
@@ -200,40 +187,25 @@ class SeekPro():
     """
     
     #shifting the range of the image
-    img = img+20000
-    # #implemented to prevent the thermal image
-    # img[img >60000] = 0
+    img = img+50000
 
     if img is None:
         return np.array([0])
     mini = img.min()
     maxi = img.max()
-    imgScale = (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8) 
-#      ##Calibration matrix (SOURCE OF ERROR)
-#     mtx = np.array([[639.06, 0, 135.45],[0, 637.74, 99.42],[0, 0, 1]])
-#     ##Distortion matrix (SOURCE OF ERROR)
-#     dist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
-#     ##Calibrating image captured  
-#     newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(WIDTH,HEIGHT),1,(WIDTH,HEIGHT))
-#     ##Revoming image distortion
-#     dst = cv2.undistort(imgScale, mtx, dist, None, newcameramtx)
-#     ## Cropping regions that are not in the image after correction
-# #    x,y,w,h = roi
-# #    dst = dst[y:y+h, x:x+w]
-    return imgScale #dst
+    imgScale = ((np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.)).astype(np.uint8)
 
-  # def IRCalibration:
-
+    # imgScale = cv2.medianBlur(imgScale, 5)
+    # imgScale = cv2.equalizeHist(imgScale)
+    return imgScale 
 
 if __name__ == '__main__':
+
   from time import time
   from time import strftime
   from time import sleep
 #  import scipy.io as sio
   
-#  thermdata = {}
-#  thermrescaledata = {}
-
   # Setting thermal camera
   IRCam = SeekPro()
   cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)

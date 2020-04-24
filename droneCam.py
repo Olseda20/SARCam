@@ -6,9 +6,7 @@ if os.geteuid() != 0:
     subprocess.call(['sudo', 'python3'] + sys.argv)
 
 import cv2
-import IRCam
-import RGBCam
-import saliency 
+import IRCam, RGBCam, saliency
 import numpy as np
 from time import time
 
@@ -17,9 +15,17 @@ import scipy.io as sio
 from imutils import contours
 import imutils
 
+#for threading
+import concurrent.futures
+
+
 #Image displaying (the more purple the hotter)
 LUTmat = sio.loadmat('PurpLUT.mat')
 purpLUT = LUTmat['purpCol']
+
+
+##Initialisation parameters
+RESOLUTION = 320,240
 
 '''Spot to define all the the calibration and
    the perspective transformation data so it is all here and not in many regions'''
@@ -40,26 +46,21 @@ IRdist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
 thermPoints = np.array([[11, 6],[34, 226],[296, 223],[296,19],[101,160]])
 visPoints = np.array([[49, 24],[57, 158],[232,156],[232,26],[99,117]])
 
-import concurrent.futures
 
-
-##Giving OS Permissions
-import os
-import sys
-import subprocess
-
-if os.geteuid() != 0:
-    subprocess.call(['sudo', 'python3'] + sys.argv)
+RGBCam.cam_initialise()
 
 
 # Setting the camera functions
 IRCam = IRCam.SeekPro()
-RGBCam = RGBCam.PiCam()
+RGB1 = RGBCam.PiCam()
+RGB2 = RGBCam.WebCam()
 sal = saliency.findSaliency()
 
 #Initialise Camera Windows
 cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
 cv2.namedWindow("RGB", cv2.WINDOW_NORMAL)
+cv2.namedWindow("RGB2", cv2.WINDOW_NORMAL)
+
 
 #class droneCam():
 def imageRotation(img,angle): 
@@ -95,22 +96,25 @@ def perspTForm(img, movingPoints, fixedPoints):
       ## transformation matrix to align the thermal images onto thevisual image
       tform, status = cv2.findHomography(movingPoints, fixedPoints)
       ## warping the thermal image to map onto the visual image 
-      dst = cv2.warpPerspective(img,tform,(320,240))#,cv2.INTER_LINEAR, cv2.BORDER_CONSTANT, 255)
+      dst = cv2.warpPerspective(img,tform,(RESOLUTION))#,cv2.INTER_LINEAR, cv2.BORDER_CONSTANT, 255)
       return dst 
   
 #Function to get and preprocess thermal camera image into droneCam
 def thermImageProc(): 
-      ##Get thermal image 
-      IR = IRCam.get_image()
-      ##convert the raw data into 0-255 grayscale range
-      IRrescale = IRCam.rescale(IR)
-      ##Rotation of the thermal image by 180 degrees
-      IRRot = imageRotation(IRrescale,180)
-      ##applying themal image colourmap
-      IRtform = perspTForm(IRRot, thermPoints, visPoints)
-      # IRColor = cv2.applyColorMap(IRtform, cv2.COLORMAP_HSV)
+      try:
+            ##Get thermal image 
+            IR = IRCam.get_image()
+            ##convert the raw data into 0-255 grayscale range
+            IRrescale = IRCam.rescale(IR)
+            ##Rotation of the thermal image by 180 degrees
+            IRRot = imageRotation(IRrescale,0)
+            ##applying themal image colourmap
+            IRtform = perspTForm(IRRot, thermPoints, visPoints)
+            # IRColor = cv2.applyColorMap(IRtform, cv2.COLORMAP_HSV)
 
-      # IRColor = cv2.LUT(IRtform, purpLUT)
+            # IRColor = cv2.LUT(IRtform, purpLUT)
+      except:
+            print("[ERROR] Thermal camera issue, Likely cabling issue..")
       return IRtform #, IRColor
 
 
@@ -118,9 +122,13 @@ def thermImageProc():
 #Function to get and preprocess visual camera image into droneCam
 def visImageProc():
       #Get Visual Image
-      RGB = RGBCam.frameCapture()
-      RGB = imageRotation(RGB,180)
-      return RGB
+      RGBimg1 = RGB1.frameCapture()
+      # RGBimg2 = RGB2.frameCapture()
+
+      #rotating the image
+      # RGB1 = imageRotation(RGB1,270)
+
+      return RGBimg1#, RGBimg2
 
 #Function to overlat the thermal and the visual images ontop of each other by the time it is in this functino
 #the images should already be able to overlay ontop of each other
@@ -140,8 +148,10 @@ if __name__ == '__main__':
       from time import sleep
       from time import time
 
-      prevIRImg = thermImageProc()
-      prevRGBImg = visImageProc()
+      # prevIRImg = thermImageProc()
+      prevRGBImg1 = visImageProc()
+      # prevRGBImg2 = visImageProc()[1]
+      
       orig = []
 
       t = 0
@@ -150,13 +160,18 @@ if __name__ == '__main__':
             t = time() 
             print("fps:",1/(t-t0))
             t0 = time()
-            RGBImg = visImageProc()
-            orig = RGBImg.copy()
+            WideRGB = visImageProc()
+            # NarrowRGB = visImageProc()[1]
+
+            # orig = RGBImg1.copy()
+
             #  attempt at improving efficiency   if (IRImg.all() != thermImageProc().all()):
-            IRImg = prevIRImg
+            # IRImg = prevIRImg
             #displaying the calibrated and rotated images
-            cv2.imshow("Seek",IRImg)
-            cv2.imshow("RGB", RGBImg)
+            # cv2.imshow("Wide IR",IRImg)
+            cv2.imshow("Wide RGB", WideRGB)
+            # cv2.imshow("Narrow RGB", NarrowRGB)
+
 
             ## Fusing the images
 #            IRCol = IRImg[1]

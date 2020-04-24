@@ -6,8 +6,12 @@ import imutils
 class findSaliency():
       def __init__(self):
             ''' Initiating the saliency model to be use for this process'''
-#            self.saliency = cv2.saliency.StaticSaliencyFineGrained_create()
-            self.saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
+            self.saliency = cv2.saliency.StaticSaliencyFineGrained_create()
+            # self.saliency = cv2.saliency.()
+            # self.saliency = cv2.saliency.StaticSaliencyBinWangApr2014_create()
+            # self.saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
+
+            # self.saliency = cv2.saliency.StaticSaliency()
 
       def getSaliency(self,img,threshperc):
             ''' functin to capture the saliency in a given image and output a threshold map based on 
@@ -38,7 +42,6 @@ class findSaliency():
                   return sortedImage, boundingBoxes
             except:
                   print('sort fail')
-
 
       def getContorPosition(self, img, boundingBoxes):
             #Left Right
@@ -80,8 +83,6 @@ class findSaliency():
                   except:
                         print('error in the ROI Location append loop')
 
-
-
             #Left right signal 
             if L > C or L > R:
                   Hsignal = -1
@@ -104,65 +105,119 @@ class findSaliency():
             signal = Hsignal, Vsignal
             return signal
 
+class findSaliency2():
+      def __init__(self):
+            ''' Initiating the saliency model to be use for this process'''
+            # self.saliency = cv2.saliency.StaticSaliencyFineGrained_create()
+            self.saliency = cv2.saliency.StaticSaliencySpectralResidual_create()
+
+            # self.saliency = cv2.saliency.StaticSaliency()
+
+      def getSaliency(self,img,threshperc):
+            ''' functin to capture the saliency in a given image and output a threshold map based on 
+            a given threshold percentage desire'''
+            #Grabbing the saliency and converting it into a grescale integer value
+            saliencyMap = np.array(255*self.saliency.computeSaliency(img)[1],dtype="uint8")
+            #Creating a threshold percentatge to grescale conversion
+            threshpercconv = np.int((threshperc/100)*255)
+            #applying thresholding the to top 'threshperc' of the image
+            threshMap = cv2.threshold(saliencyMap,threshpercconv,255,cv2.THRESH_BINARY)[1]
+            return saliencyMap, threshMap
+
 if __name__ == '__main__':
 
       from time import time
-      import RGBCam
       from time import time
 
-      #IMAGE CAPTUREimage
-      RGBCam = RGBCam.PiCam()
-      cap = cv2.VideoCapture(0)
-      if not (cap.isOpened()):
-          print("Could not open video device")
-      def getRGB():    
-          ret, frame = cap.read()
-          return frame 
-      def visImageProc():
-            #Get Visual Image
-            RGB = RGBCam.frameCapture()
-            return RGB
 
       t = 0 
       t0 =0
       findSaliency = findSaliency()
+      findSaliency2 = findSaliency2()
       threshold = 85
       i = 0
-      while True:
-            t = time()
-            # print("fps:",1/(t-t0))
-            t0 = time()
 
-            if cv2.waitKeyEx(1) & 0xFF == ord('w'):
-                  threshold = threshold + 5
-            if cv2.waitKeyEx(1) & 0xFF == ord('s'):
-                  threshold = threshold - 5
+      # for image 
+      # RGB = cv2.imread('/home/pi/SARCam/Images/PiCam/11042020-132426piimg.png')
+      # RGB = cv2.imread('/home/pi/SARCam/Images/PiCam/11042020-132353piimg.png')
+      # RGB = cv2.imread('/home/pi/SARCam/Images/PiCam/11042020-132323piimg.png')
+      # RGB = cv2.imread('/home/pi/SARCam/Images/PiCam/11042020-132319piimg.png')
 
-            # print(threshold)
+      RGB = cv2.imread('/home/pi/SARCam/Images/PiCamTest/14042020-200950piimg.png')
+      (saliencyMap, threshMap) = findSaliency.getSaliency(RGB,30)
+      (saliencyMap2, threshMap2) = findSaliency2.getSaliency(saliencyMap,55)
+      # (saliencyMap2, threshMap2) = findSaliency2.getSaliency(RGB,55)
 
-            RGB = visImageProc()
-            (saliencyMap, threshMap) = findSaliency.getSaliency(RGB,threshold)
+      # sortedImage, boundingBoxes = findSaliency.getContors(threshMap, RGB)
+      # signal = findSaliency.getContorPosition(sortedImage, boundingBoxes)
+      cv2.imshow('rgb',RGB)
+      cv2.imshow("SalMap",saliencyMap)
+      cv2.imshow("SalMap2",saliencyMap2)
+
+      cv2.imshow("threshMap",threshMap)
+      cv2.imshow("threshMap2",threshMap2)
+
+      # cv2.imshow("sortedImage",sortedImage)
+      cv2.waitKey(0)
+
+
+      # import RGBCam
+      # # #IMAGE CAPTUREimage
+      # RGBCam = RGBCam.PiCam()
+      # cap = cv2.VideoCapture(0)
+      # if not (cap.isOpened()):
+      #     print("Could not open video device")
+      # def getRGB():    
+      #     ret, frame = cap.read()
+      #     return frame 
+      # def visImageProc():
+      #       #Get Visual Image
+      #       RGB = RGBCam.frameCapture()
+      #       return RGB
+
+      #for video
+      # while True:
+      #       t = time()
+      #       print("fps:",1/(t-t0))
+      #       t0 = time()
+
+      #       if cv2.waitKeyEx(1) & 0xFF == ord('w'):
+      #             threshold = threshold + 5
+      #       if cv2.waitKeyEx(1) & 0xFF == ord('s'):
+      #             threshold = threshold - 5
+
+      #       # print(threshold)
+
+      #       #image capture
+      #       RGB = visImageProc()
             
-            try:
-                  sortedImage, boundingBoxes = findSaliency.getContors(threshMap, RGB)
-            except:
-                  print('error2')
+      #       #image saliency and thresholding
+      #       (saliencyMap, threshMap) = findSaliency.getSaliency(RGB,threshold)
+      #       (saliencyMap2, threshMap) = findSaliency2.getSaliency(saliencyMap,55)
 
-            # print(boundingBoxes)
-            if i == 10:
-                  try:
-                        signal = findSaliency.getContorPosition(sortedImage, boundingBoxes)
-                  except:
-                        print('no gimbal movement')
-                  i = 0
-            i = i+1
             
+      #       #finding image contors
+      #       try:
+      #             sortedImage, boundingBoxes = findSaliency.getContors(threshMap, RGB)
+      #       except:
+      #             print('image contoring error')
 
-            cv2.imshow('rgb',RGB)
-            cv2.imshow("SalMap",saliencyMap)
+      #       # print(boundingBoxes)
+      #       #organising contor positons and finding the gimbal movement direction
+      #       if i == 10:
+      #             try:
+      #                   signal = findSaliency.getContorPosition(sortedImage, boundingBoxes)
+      #             except:
+      #                   print('no gimbal movement')
+      #             i = 0
+      #       i = i+1
 
-            cv2.imshow("threshMap",threshMap)
+      #       cv2.imshow('rgb',RGB)
+      #       cv2.imshow("SalMap",saliencyMap)
+      #       cv2.imshow("SalMap2",saliencyMap2)
+
+      #       cv2.imshow("threshMap",threshMap)
             
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                  break
-            cv2.waitKey(1)
+      #       if cv2.waitKey(1) & 0xFF == ord('q'):
+      #             break
+      #       cv2.waitKey(1)
