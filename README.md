@@ -12,8 +12,9 @@ in the scottish mountains.
 The visual cameras are important for clear vision of the scene and the thermal cameras can be utilised for 
 their benefits of analysing temperature differentials in different scenes.
 
+
 ```
-testing this out 
+
 ```
 
 [ Seek-thermal-Python ](https://github.com/LaboratoireMecaniqueLille/Seek-thermal-Python/blob/master/seekpro.py ) - Python code to capture images from the thermal camera 
