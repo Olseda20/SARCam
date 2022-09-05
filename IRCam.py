@@ -9,7 +9,7 @@ import sys
 import subprocess
 
 if os.geteuid() != 0:
-    subprocess.call(['sudo', 'python3'] + sys.argv)
+  subprocess.call(['sudo', 'python3'] + sys.argv)
 
 import usb.core
 import usb.util
@@ -77,12 +77,14 @@ class SeekPro():
     """
     For each dead pix, take the median of the surrounding pixels
     """
-    for i,j in self.dead_pixels:
+    for i, j in self.dead_pixels:
       img[i,j] = np.median(img[max(0,i-1):i+2,max(0,j-1):j+2])
     return img
 
   def crop(self,raw_img):
-    """Get the actual image from the raw image"""
+    """
+    Get the actual image from the raw image
+    """
     return raw_img[4:4+HEIGHT,1:1+WIDTH]
 
   def send_msg(self,bRequest,  data_or_wLength,
@@ -145,7 +147,7 @@ class SeekPro():
     # 512 instead of 0, to avoid crashes when there is an unexpected offset
     # It often happens on the first frame
     while remaining > 512:
-      #print(remaining," remaining")
+      # print(remaining," remaining")
       ret += self.dev.read(0x81, 13680, 1000)
       remaining = toread-len(ret)
     status = ret[4]
@@ -163,8 +165,8 @@ class SeekPro():
       status,img = self.grab()
       #print("Status=",status)
       #Program breaking
-      # if cv2.waitKey(1) & 0xFF == ord('q'):
-      #       break
+      if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
         
       if status == 1: # Calibration frame
         self.calib = self.crop(img)-1600
@@ -172,55 +174,69 @@ class SeekPro():
         if self.calib is not None:
           return self.correct_dead_pix(self.crop(img)-self.calib)
 
-
   def rescale(self, img):
     """
     To adapt the range of values to the actual min and max and cast it into
     an 8 bits image
     """
     #shifting the range of the image
-    img = img+50000
+    img = img + 30000
+    # #implemented to prevent the thermal image
+    # img[img >60000] = 0
 
     if img is None:
         return np.array([0])
     mini = img.min()
     maxi = img.max()
-    imgScale = ((np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.)).astype(np.uint8)
+    imgScale = (np.clip(img-mini,0,maxi-mini)/(maxi-mini)*255.).astype(np.uint8) 
+    
+    #Calibration matrix
+    mtx = np.array([[639.06, 0, 135.45],[0, 637.74, 99.42],[0, 0, 1]])
+    #Distortion matrix
+    dist = np.array([[-1.1945, 24.321, -0.00598, 0.01358, -0.02011]])
+    newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx, dist, (WIDTH,HEIGHT), 1, (WIDTH,HEIGHT))
+    
+    # undistort
+    dst = cv2.undistort(imgScale, mtx, dist, None, newcameramtx)
+    # crop the image
+    x, y, w, h = roi
+    dst = dst[y:y+h, x:x+w]
 
-    # imgScale = cv2.medianBlur(imgScale, 5)
-    # imgScale = cv2.equalizeHist(imgScale)
-    return imgScale 
+    return dst
 
 if __name__ == '__main__':
-
   from time import time
   from time import strftime
   from time import sleep
   import scipy.io as sio
-  
+
+  thermdata = {}
+  thermrescaledata = {}
+
   # Setting thermal camera
   IRCam = SeekPro()
   cv2.namedWindow("Seek",cv2.WINDOW_NORMAL)
   t0 = time()
-  
+
   while True:
-      t = time()
-      print("fps:",1/(t-t0))
-      t0 = time()
-      
-      r = IRCam.get_image()
-      rdisp = IRCam.rescale(r)
+    t = time()
+    print("fps:",1/(t-t0))
+    t0 = time()
 
-    #  print(rdisp)
-      cv2.imshow("Seek",rdisp)
-      
-      timestr = strftime("%d%m%Y-%H%M%S")
-    #  thermdata['thermcameradata'] = r
-    #  thermrescaledata['thermcameradatarescale'] = rdisp
-    #  sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalmat.mat', thermdata)
-    #  sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalrescale.mat', thermrescaledata)
-    #  cv2.imwrite(f'/home/pi/SARCam/thermalmat/{timestr}thermalimg.png', rdisp)
+    ir_img = IRCam.get_image()
+    ir_img_rescale = IRCam.rescale(ir_img)
 
-      if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-      cv2.waitKey(1)
+    cv2.imshow("Seek", ir_img_rescale)
+    timestr = strftime("%d%m%Y-%H%M%S")
+    thermdata['thermcameradata'] = ir_img
+    thermrescaledata['thermcameradatarescale'] = ir_img_rescale
+
+    # replace path with relevant storage position
+    sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalmat.mat', thermdata) 
+    sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalrescale.mat', thermrescaledata)
+     cv2.imwrite(f'/home/pi/SARCam/thermalmat/{timestr}thermalimg.png', ir_img_rescale)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+      break
+    sleep(0.1)
+    cv2.waitKey(1)
