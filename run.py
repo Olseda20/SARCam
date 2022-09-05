@@ -6,7 +6,6 @@ if os.geteuid() != 0:
 #libraries for general image/data manipulation
 import cv2
 import numpy as np
-# from imutils import contors
 import imutils
 
 #importing the saleincy library
@@ -14,11 +13,11 @@ from saliency import findSaliencyFineGrained, findSaliencySpectralResidual
 
 #other general libraries
 from time import time
-import datetime
 import concurrent.futures
 
 #For visual cameras capture
 import RGBCam
+
 #For thermal camera capture
 import IRCam
 
@@ -32,6 +31,7 @@ WebCam = RGBCam.WebCam(src=1).start()
 findSaliencyFineGrained = findSaliencyFineGrained()
 findSaliencySpectralResidual = findSaliencySpectralResidual()
 contourProcessing = contourProcessing()
+
 #setting the threshold for the saliency algorithm and initiating the saleincy counter
 threshold = 65
 saliencyCount = 1
@@ -63,7 +63,7 @@ class imageModification():
 
     def imageCropping(self, img, roi):
         ''' function to crop the image to the centre of the thermal image  '''
-        ## Cropping regions that are not in the image after, correction
+        # Cropping regions that are not in the image after, correction
         x,y,w,h = roi
         img = img[y:y+h, x:x+w]
         return img
@@ -82,7 +82,7 @@ class imageModification():
     
     def imageFusion(self, background, foreground):
         if background.shape == foreground.shape:
-            ## Adds the images together (has a transarancy factor)
+            # Adds the images together (has a transarancy factor)
             fusedImg = cv2.addWeighted(background,1,foreground,0.5,0)        
             return fusedImg
         else :
@@ -91,24 +91,23 @@ class imageModification():
             print(f'Foreground shape is :{foreground.shape}')
 
     def saliencyGimbalCommand(self,img, threshold):
-        #getting the saleincy maps from the openCV saliency Models
+        # Getting the saleincy maps from the openCV saliency Models
         (saliencyMap, threshMap) = findSaliencyFineGrained.getSaliency(img,threshold)
         (saliencyMap2, threshMap2) = findSaliencySpectralResidual.getSaliency(img,threshold)
 
-        #getting the contours from the spectral residual image 
+        # Getting the contours from the spectral residual image 
         (sortedImage, boundingBoxes) = contourProcessing.getContours(threshMap, saliencyMap2)
-        gimbalMove = findSaliency.getContorPosition(sortedImage,boundingBoxes)
+        gimbalMove = findSaliencyFineGrained.getContorPosition(sortedImage,boundingBoxes)
         return (saliencyMap, saliencyMap2, threshMap, threshMap2, sortedImage, boundingBoxes, gimbalMove)
 
     def skinDetector(self,img):
         '''Function to identify the skin of a person in an image'''
-        #Skinmask HSV range
+        # Skinmask HSV range
         lower = np.array([0, 48, 80], dtype = "uint8")
         upper = np.array([30, 255, 255], dtype = "uint8")
 
-        # resize the frame, convert it to the HSV color space,
-        # and determine the HSV pixel intensities that fall into
-        # the speicifed upper and lower boundaries
+        # resize the frame, convert it to the HSV color space, and determine the HSV pixel intensities that 
+        # fall into the speicifed upper and lower boundaries
         converted = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         skinMask = cv2.inRange(converted, lower, upper)
 
@@ -126,14 +125,12 @@ class imageModification():
         return skin
 
     def thermHumanDetector(self, img):
-        # apply a series of erosions and dilations to the mask
-        # using an elliptical kernel
+        # apply a series of erosions and dilations to the mask using an elliptical kernel
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
         skinMask = cv2.erode(skinMask, kernel, iterations = 2)
         skinMask = cv2.dilate(skinMask, kernel, iterations = 2)
 
-        # blur the mask to help remove noise, then apply the
-        # mask to the frame
+        # blur the mask to help remove noise, then apply the mask to the frame
         skinMask = cv2.GaussianBlur(skinMask, (7, 7), 0)
         skin = cv2.bitwise_and(frame, frame, mask = skinMask)
         return skin
@@ -148,7 +145,7 @@ class CameraProcessing():
         WideImg = PiCam.frameCapture()
 
         ## Image Processing region for the Wide Camera
-        #PiCam image rotation of 180 degrees
+        # PiCam image rotation of 180 degrees
         WideImg = imageModification().imageRotation(WideImg,180)
         return
 
@@ -166,13 +163,13 @@ class CameraProcessing():
         '''post processing for the SeekPro before introduced'''
         global IRImg
         global IRWarp
-        ##Grabbing SeekPro Image
+        ## Grabbing SeekPro Image
         IRImg = SeekPro.rescale(SeekPro.get_image())
 
-        ##Image processing of thermal image
-        #Revoming image distortion
+        ## Image processing of thermal image
+        # Revoming image distortion
         IRWarp = cv2.undistort(IRImg, SeekProCalib, SeekProDist, None, SeekProUnDisMat)
-        #Applying Perspective transformation matrix to overlay thermalimage onto visual
+        # Applying Perspective transformation matrix to overlay thermalimage onto visual
         IRWarp = cv2.warpPerspective(IRImg,tform,(RESOLUTION))
         return 
 
@@ -186,7 +183,7 @@ if __name__ == '__main__':
     t0 = time()
 
     def saliencyImplement(img, threshold):
-        '''implementing the OpenCV saliency function from the saleincyCV library'''
+        ''' Implementing the OpenCV saliency function from the saleincyCV library '''
         try:  
             saliencyMap, saliencyMap2, threshMap, threshMap2, sortedImage, boundingBoxes, gimbalMove = imageModification().saliencyGimbalCommand(img, threshold)
 
@@ -194,7 +191,7 @@ if __name__ == '__main__':
             print('GimbalMovement failed')
 
     def thermalSmoothing(img):
-        '''function to apply smoothing to the thermal image'''
+        ''' method to apply smoothing to the thermal image'''
         IRsmooth = cv2.medianBlur(img,3)        
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
         IRsmooth = cv2.erode(IRsmooth, kernel, iterations = 3)
@@ -281,8 +278,4 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
 
     print("[INFO] RGB Cameras Released √")
-    # return 
 
-
-
-# pi@raspberrypi:~

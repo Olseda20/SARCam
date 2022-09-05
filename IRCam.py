@@ -1,4 +1,4 @@
- # Original Author: Victor Couty
+# Original Author: Victor Couty
 # Modified by: Omar Ali
 
 ### This module is where the thermal camera image can be captured
@@ -74,7 +74,9 @@ class SeekPro():
     return list(zip(*np.where(img<100)))
 
   def correct_dead_pix(self,img):
-    """For each dead pix, take the median of the surrounding pixels"""
+    """
+    For each dead pix, take the median of the surrounding pixels
+    """
     for i,j in self.dead_pixels:
       img[i,j] = np.median(img[max(0,i-1):i+2,max(0,j-1):j+2])
     return img
@@ -111,34 +113,25 @@ class SeekPro():
     Sends all the necessary data to init the camera
     """
     self.send_msg(SET_OPERATION_MODE, b'\x00\x00')
-    #r = receive_msg(GET_FIRMWARE_INFO, 4)
-    #print(r)
-    #r = receive_msg(READ_CHIP_ID, 12)
-    #print(r)
+    #print(receive_msg(GET_FIRMWARE_INFO, 4))
+    #print(receive_msg(READ_CHIP_ID, 12))
     self.send_msg(SET_FACTORY_SETTINGS_FEATURES, b'\x06\x00\x08\x00\x00\x00')
-    #r = receive_msg(GET_FACTORY_SETTINGS, 12)
-    #print(r)
+    #print(receive_msg(GET_FACTORY_SETTINGS, 12))
     self.send_msg(SET_FIRMWARE_INFO_FEATURES,b'\x17\x00')
-    #r = receive_msg(GET_FIRMWARE_INFO, 64)
-    #print(r)
+    #print(receive_msg(GET_FIRMWARE_INFO, 64))
     self.send_msg(SET_FACTORY_SETTINGS_FEATURES, b"\x01\x00\x00\x06\x00\x00")
-    #r = receive_msg(GET_FACTORY_SETTINGS,2)
-    #print(r)
+    #print(receive_msg(GET_FACTORY_SETTINGS,2))
     for i in range(10):
       for j in range(0,256,32):
         self.send_msg(
             SET_FACTORY_SETTINGS_FEATURES,b"\x20\x00"+bytes([j,i])+b"\x00\x00")
-        #r = receive_msg(GET_FACTORY_SETTINGS,64)
-        #print(r)
+        #print(receive_msg(GET_FACTORY_SETTINGS,64))
     self.send_msg(SET_FIRMWARE_INFO_FEATURES,b"\x15\x00")
-    #r = receive_msg(GET_FIRMWARE_INFO,64)
-    #print(r)
+    #print(receive_msg(GET_FIRMWARE_INFO,64))
     self.send_msg(SET_IMAGE_PROCESSING_MODE,b"\x08\x00")
-    #r = receive_msg(GET_IMAGE_PROCESSING_MODE,2)
-    #print(r)
+    #print(receive_msg(GET_IMAGE_PROCESSING_MODE,2))
     self.send_msg(SET_OPERATION_MODE,b"\x01\x00")
-    #r = receive_msg(GET_OPERATION_MODE,2)
-    #print(r)
+    #print(receive_msg(GET_OPERATION_MODE,2))
 
   def grab(self):
     """
@@ -185,7 +178,6 @@ class SeekPro():
     To adapt the range of values to the actual min and max and cast it into
     an 8 bits image
     """
-    
     #shifting the range of the image
     img = img+50000
 
@@ -204,7 +196,7 @@ if __name__ == '__main__':
   from time import time
   from time import strftime
   from time import sleep
-#  import scipy.io as sio
+  import scipy.io as sio
   
   # Setting thermal camera
   IRCam = SeekPro()
@@ -231,5 +223,4 @@ if __name__ == '__main__':
 
       if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-#      sleep(0.5)
       cv2.waitKey(1)

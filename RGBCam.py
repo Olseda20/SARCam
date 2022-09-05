@@ -1,41 +1,41 @@
 # import the necessary packages
-from picamera.array import PiRGBArray
+from datetime import datetime
 from picamera import PiCamera
-import cv2
-import numpy as np
-import imutils
+from picamera.array import PiRGBArray
 from threading import Thread
+import numpy as np
+import cv2
+import imutils
 import time
 
 RESOLUTION = 320, 240
 FRAMERATE = 25
 
-import datetime
 class FPS:
-	def __init__(self):
-		# store the start time, end time, and total number of frames
-		# that were examined between the start and end intervals
-		self._start = None
-		self._end = None
-		self._numFrames = 0
-	def start(self):
-		# start the timer
-		self._start = datetime.datetime.now()
-		return self
-	def stop(self):
-		# stop the timer
-		self._end = datetime.datetime.now()
-	def update(self):
-		# increment the total number of frames examined during the
-		# start and end intervals
-		self._numFrames += 1
-	def elapsed(self):
-		# return the total number of seconds between the start and
-		# end interval
-		return (self._end - self._start).total_seconds()
-	def fps(self):
-		# compute the (approximate) frames per second
-		return self._numFrames / self.elapsed()
+    def __init__(self):
+        # store the start time, end time, and total number of frames
+        # that were examined between the start and end intervals
+        self._start = None
+        self._end = None
+        self._numFrames = 0
+    def start(self):
+        # start the timer
+        self._start = datetime.now()
+        return self
+    def stop(self):
+        # stop the timer
+        self._end = datetime.now()
+    def update(self):
+        # increment the total number of frames examined during the
+        # start and end intervals
+        self._numFrames += 1
+    def elapsed(self):
+        # return the total number of seconds between the start and
+        # end interval
+        return (self._end - self._start).total_seconds()
+    def fps(self):
+        # compute the (approximate) frames per second
+        return self._numFrames / self.elapsed()
 
 class PiCam():
     def __init__(self):
@@ -43,23 +43,22 @@ class PiCam():
         self.camera = PiCamera()
         self.camera.resolution = RESOLUTION
         self.camera.framerate = FRAMERATE
-        #Convert Data into readable array
+        # convert the Data into readable array
         self.rawCapture = PiRGBArray(self.camera, RESOLUTION)
-        #Camera Warmup Time
+        # camera warmup time
         time.sleep(0.1)
 
     def frameCapture(self):
         '''Capturing the RGB Image'''
-        #Clearing the image stream for the next frame (otherwise there will be a buffer error)
+        # clearing the image stream for the next frame (otherwise there will be a buffer error)
         self.rawCapture.truncate(0)
-        #Capturing a frame from the video stream to display         
+        # capturing a frame from the video stream to display
         for frame in self.camera.capture_continuous(self.rawCapture, format="bgr", use_video_port=True):
             img1 = frame.array
             return img1
             
     def stop(self):
         self.camera.close()
-
 
 class WebCam():
     def __init__(self, src=0):
@@ -70,10 +69,12 @@ class WebCam():
         # initialize the variable used to indicate if the thread should
         # be stopped
         self.stopped = False
+
     def start(self):
         # start the thread to read frames from the video stream
         Thread(target=self.update, args=()).start()
         return self
+
     def update(self):
         # keep looping infinitely until the thread is stopped
         while True:
@@ -82,9 +83,11 @@ class WebCam():
                 return
             # otherwise, read the next frame from the stream
             (self.grabbed, self.frame) = self.stream.read()
+
     def read(self):
         # return the frame most recently read
         return self.frame
+
     def stop(self):
         # indicate that the thread should be stopped
         self.stopped = True
@@ -100,6 +103,7 @@ class cam_initialise():
         RGBCam2 = WebCam()
         RGBCam2.frameCapture()
         RGBCam2.releaseCapture()
+        ## Diplay capture window for debugging
         # cv2.namedWindow("piCam",cv2.WINDOW_NORMAL)
         # cv2.namedWindow("webCam",cv2.WINDOW_NORMAL)
         print("[INFO] Camera initialised √")
@@ -108,7 +112,8 @@ class cam_initialise():
 
 if __name__ == '__main__':
     vs = WebCam(src=1).start()
-    # fps = FPS().start()
+    fps = FPS().start()
+
     # loop over some frames...this time using the threaded stream
     while True:
         # grab the frame from the threaded video stream and resize it
@@ -117,18 +122,15 @@ if __name__ == '__main__':
         # frame = imutils.resize(frame, width=320)
 
         # check to see if the frame should be displayed to our screen
-        # if args["display"] > 0:
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
 
         # update the FPS counter
-        # fps.update()
-        # break
+        fps.update()
 
     # stop the timer and display FPS information
-    # fps.stop()
-    # do a bit of cleanup
-    # vs.stop()
+    fps.stop()
+    # end cv2 window "Frame" after coompleted run
     cv2.destroyAllWindows()
 
 # if __name__ == '__main__':
