@@ -234,7 +234,7 @@ if __name__ == '__main__':
     # replace path with relevant storage position
     sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalmat.mat', thermdata) 
     sio.savemat(f'/home/pi/SARCam/thermalmat/{timestr}thermalrescale.mat', thermrescaledata)
-     cv2.imwrite(f'/home/pi/SARCam/thermalmat/{timestr}thermalimg.png', ir_img_rescale)
+    cv2.imwrite(f'/home/pi/SARCam/thermalmat/{timestr}thermalimg.png', ir_img_rescale)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
       break
